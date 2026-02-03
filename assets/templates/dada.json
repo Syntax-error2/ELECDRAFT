@@ -1,0 +1,12 @@
+{
+    "meta": {
+        "name": "Main Building",
+        "author": "Lead Engineer",
+        "standard": "PEC (Philippines)",
+        "export_pdf": true,
+        "system_voltage": 230,
+        "transformer_kva": 50,
+        "transformer_z": 0.05
+    },
+    "items": []
+}

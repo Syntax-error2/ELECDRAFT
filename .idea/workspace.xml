@@ -4,44 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="3063fac6-37d5-43d3-89ed-4c5e93dc6c8b" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/ELECDRAFT.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/symbols/ELECDRAFT_LOGO.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/symbols/ac.svg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/symbols/breaker.svg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/symbols/duplex.svg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/symbols/emergency.svg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/symbols/feeder.svg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/symbols/gfci.svg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/symbols/industrial.svg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/symbols/light.svg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/symbols/motor.svg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/symbols/panel.svg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/symbols/pump.svg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/symbols/switch.svg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/symbols/switch_1g.svg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/symbols/switch_2g.svg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/symbols/switch_3g.svg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/templates/D and S ALL.dwg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/templates/EVERGREEN and KAERUS.dxf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/templates/residential_unit.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/data/components.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/modules/analysis_engine.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/modules/cad_utility.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/modules/exporter.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/modules/logic.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/modules/sld_generator.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/qodana.yaml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ui/canvas.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ui/settings_dialog.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ui/sld_viewer.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ui/splash_screen.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ui/view_3d.py" afterDir="false" />
+    <list default="true" id="3063fac6-37d5-43d3-89ed-4c5e93dc6c8b" name="Changes" comment="commit all">
+      <change afterPath="$PROJECT_DIR$/setup.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -59,6 +23,12 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/Syntax-error2/ELECDRAFT.git",
+    "accountId": "98ba1b17-04fa-4cb7-ad00-b7186669784a"
+  }
+}]]></component>
   <component name="ProblemsViewState">
     <option name="selectedTabId" value="QODANA_PROBLEMS_VIEW_TAB" />
   </component>
@@ -134,6 +104,19 @@
       <option name="presentableId" value="Default" />
       <updated>1768473906849</updated>
     </task>
+    <task id="LOCAL-00001" summary="commit all">
+      <option name="closed" value="true" />
+      <created>1770126743721</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1770126743721</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="commit all" />
+    <option name="LAST_COMMIT_MESSAGE" value="commit all" />
   </component>
 </project>
