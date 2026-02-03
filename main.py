@@ -20,6 +20,9 @@ from ui.settings_dialog import ProjectSettingsDialog
 from modules.logic import PECCalculator
 
 
+# ---------------------------------------------------------------------------
+# CollapsibleBox — animated expandable/collapsible sidebar section
+# ---------------------------------------------------------------------------
 class CollapsibleBox(QWidget):
     """Custom widget for expandable/minimizable component sections with Animation."""
 
@@ -78,6 +81,9 @@ class CollapsibleBox(QWidget):
             self.setMinimumHeight(collapsed_height + content_height)
 
 
+# ---------------------------------------------------------------------------
+# ElecDraftApp — main application window
+# ---------------------------------------------------------------------------
 class ElecDraftApp(QMainWindow):
     def __init__(self, splash=None):
         super().__init__()
@@ -100,12 +106,18 @@ class ElecDraftApp(QMainWindow):
             "transformer_z": 0.05
         }
 
+        # ------------------------------------------------------------------
+        # Splash progress 10 %
+        # ------------------------------------------------------------------
         if self.splash:
             self.splash.set_progress(10)
             self.splash.showMessage("Initializing PEC Logic Engine...",
                                     Qt.AlignBottom | Qt.AlignLeft, QColor("#00e5ff"))
         self.load_component_configs()
 
+        # ------------------------------------------------------------------
+        # Splash progress 40 %
+        # ------------------------------------------------------------------
         if self.splash:
             self.splash.set_progress(40)
             self.splash.showMessage("Building CAD Workspace...",
@@ -114,6 +126,9 @@ class ElecDraftApp(QMainWindow):
         self.current_selected_item = None
         self.setup_ui()
 
+        # ------------------------------------------------------------------
+        # Splash progress 70 %
+        # ------------------------------------------------------------------
         if self.splash:
             self.splash.set_progress(70)
             self.splash.showMessage("Creating User Interface...",
@@ -121,11 +136,15 @@ class ElecDraftApp(QMainWindow):
 
         self.create_main_menu()
 
+        # Wire up canvas signals AFTER setup_ui so self.canvas exists
         self.canvas.signals.circuit_updated.connect(self.sync_data)
         self.canvas.scene.selectionChanged.connect(self.handle_selection_event)
         self.canvas.setContextMenuPolicy(Qt.CustomContextMenu)
         self.canvas.customContextMenuRequested.connect(self.show_canvas_context_menu)
 
+        # ------------------------------------------------------------------
+        # Splash progress 90 %
+        # ------------------------------------------------------------------
         if self.splash:
             self.splash.set_progress(90)
             self.splash.showMessage("Applying Theme...",
@@ -133,16 +152,22 @@ class ElecDraftApp(QMainWindow):
 
         self.apply_pro_styles()
 
+        # ------------------------------------------------------------------
+        # Splash progress 100 %
+        # ------------------------------------------------------------------
         if self.splash:
             self.splash.set_progress(100)
             self.splash.showMessage("Finalizing UI Components...",
                                     Qt.AlignBottom | Qt.AlignLeft, QColor("#00e5ff"))
 
+    # =====================================================================
+    # MENU BAR
+    # =====================================================================
     def create_main_menu(self):
-        """Adds a professional File and Edit menu bar at the top."""
+        """Adds a professional File, Edit, and Analysis menu bar."""
         menubar = self.menuBar()
 
-        # File Menu
+        # ----- File Menu --------------------------------------------------
         file_menu = menubar.addMenu("&File")
 
         new_action = QAction("📄 New Project", self)
@@ -162,13 +187,11 @@ class ElecDraftApp(QMainWindow):
 
         file_menu.addSeparator()
 
-        # DXF Import Action
         import_dxf_action = QAction("📐 Import DXF/DWG", self)
         import_dxf_action.setShortcut("Ctrl+I")
         import_dxf_action.triggered.connect(self.import_dxf_file)
         file_menu.addAction(import_dxf_action)
 
-        # PDF Export Action
         export_pdf_act = QAction("🖨️ Export PDF Plot", self)
         export_pdf_act.setShortcut("Ctrl+P")
         export_pdf_act.triggered.connect(self.export_to_pdf)
@@ -180,7 +203,7 @@ class ElecDraftApp(QMainWindow):
         exit_action.triggered.connect(self.close)
         file_menu.addAction(exit_action)
 
-        # Edit Menu
+        # ----- Edit Menu --------------------------------------------------
         edit_menu = menubar.addMenu("&Edit")
 
         undo_action = QAction("🔙 Undo", self)
@@ -192,14 +215,17 @@ class ElecDraftApp(QMainWindow):
         del_action.triggered.connect(self.delete_selected_components)
         edit_menu.addAction(del_action)
 
-        # Analysis Menu
+        # ----- Analysis Menu ----------------------------------------------
         analysis_menu = menubar.addMenu("&Analysis")
 
         room_analysis_act = QAction("🔍 Analyze Room Loads", self)
         room_analysis_act.triggered.connect(self.run_room_analysis)
         analysis_menu.addAction(room_analysis_act)
 
-    def import_dxf_file(self, DXFImportDialog=None):
+    # =====================================================================
+    # DXF / FLOOR-PLAN IMPORT
+    # =====================================================================
+    def import_dxf_file(self):
         """Opens a file dialog to select and import a DXF/DWG file."""
         path, _ = QFileDialog.getOpenFileName(
             self,
@@ -209,9 +235,10 @@ class ElecDraftApp(QMainWindow):
         )
 
         if not path:
+            self.statusBar().showMessage("Import cancelled")
             return
 
-        # Show modern loading dialog with progress
+        # Lazy-import to avoid circular dependency at module level
         from ui.loading_dialog import DXFImportDialog
 
         loading_dialog = DXFImportDialog(self.canvas, path, self)
@@ -220,11 +247,10 @@ class ElecDraftApp(QMainWindow):
         result = loading_dialog.exec()
 
         if result and loading_dialog.success:
-            # Load the converted PNG
             import os
             if loading_dialog.temp_png_path and os.path.exists(loading_dialog.temp_png_path):
                 self.canvas.load_from_png(loading_dialog.temp_png_path)
-                os.unlink(loading_dialog.temp_png_path)  # Clean up
+                os.unlink(loading_dialog.temp_png_path)  # Clean up temp file
 
                 self.statusBar().showMessage(f"✓ Successfully imported: {path}")
                 QMessageBox.information(
@@ -234,15 +260,18 @@ class ElecDraftApp(QMainWindow):
                     "You can now place electrical components on the floor plan.\n"
                     "Dark areas (walls) will be avoided during wire routing."
                 )
-        elif not loading_dialog.success and result == 0:
-            # Dialog was closed after error
+            else:
+                self.statusBar().showMessage("✗ Converted file not found after import")
+        elif not loading_dialog.success:
             self.statusBar().showMessage("✗ Failed to import CAD file")
         else:
-            # User cancelled
             self.statusBar().showMessage("Import cancelled")
 
+    # =====================================================================
+    # STARTUP ANIMATION
+    # =====================================================================
     def fade_in(self):
-        """Creates a smooth fade-in effect when the application starts."""
+        """Smooth fade-in effect when the application window first appears."""
         self.show()
         self.fade_anim = QPropertyAnimation(self, b"windowOpacity")
         self.fade_anim.setDuration(800)
@@ -250,32 +279,34 @@ class ElecDraftApp(QMainWindow):
         self.fade_anim.setEndValue(1.0)
         self.fade_anim.start()
 
+    # =====================================================================
+    # COMPONENT LIBRARY
+    # =====================================================================
     def load_component_configs(self):
+        """Loads the component library from disk; falls back to hard-coded defaults."""
         base_path = "assets/symbols/"
         try:
             with open('data/components.json', 'r', encoding='utf-8') as f:
                 self.comp_library = json.load(f)
         except (FileNotFoundError, json.JSONDecodeError):
             self.comp_library = {
-                "💡 Light": {"va": 100, "is_continuous": True, "type": "Lighting", "symbol": base_path + "light.svg"},
-                "🔦 Emergency": {"va": 50, "is_continuous": True, "type": "Lighting",
-                                "symbol": base_path + "emergency.svg"},
-                "🏮 Chandelier": {"va": 300, "is_continuous": True, "type": "Lighting",
-                                 "symbol": base_path + "chandelier.svg"},
-                "🔌 Duplex": {"va": 180, "is_continuous": False, "type": "Receptacle",
-                             "symbol": base_path + "duplex.svg"},
-                "🛁 GFCI Outlet": {"va": 180, "is_continuous": False, "type": "Receptacle",
-                                  "symbol": base_path + "gfci.svg"},
-                "🌀 Industrial": {"va": 1000, "is_continuous": False, "type": "Receptacle",
-                                 "symbol": base_path + "industrial.svg"},
-                "⚙️ Motor": {"va": 1500, "is_continuous": True, "type": "Motor", "symbol": base_path + "motor.svg"},
-                "🏗️ Pump": {"va": 2200, "is_continuous": True, "type": "Motor", "symbol": base_path + "pump.svg"},
-                "❄️ AC Unit": {"va": 3500, "is_continuous": True, "type": "AC", "symbol": base_path + "ac.svg"},
-                "📉 Panelboard": {"va": 0, "is_continuous": False, "type": "Panel", "symbol": base_path + "panel.svg"},
-                "🔌 Feeder": {"va": 0, "is_continuous": False, "type": "Feeder", "symbol": base_path + "feeder.svg"},
-                "🛡️ 1-Pole": {"va": 0, "is_continuous": False, "type": "Breaker", "symbol": base_path + "breaker.svg"}
+                "💡 Light":        {"va": 100,  "is_continuous": True,  "type": "Lighting",    "symbol": base_path + "light.svg"},
+                "🔦 Emergency":    {"va": 50,   "is_continuous": True,  "type": "Lighting",    "symbol": base_path + "emergency.svg"},
+                "🏮 Chandelier":   {"va": 300,  "is_continuous": True,  "type": "Lighting",    "symbol": base_path + "chandelier.svg"},
+                "🔌 Duplex":       {"va": 180,  "is_continuous": False, "type": "Receptacle",  "symbol": base_path + "duplex.svg"},
+                "🛁 GFCI Outlet":  {"va": 180,  "is_continuous": False, "type": "Receptacle",  "symbol": base_path + "gfci.svg"},
+                "🌀 Industrial":   {"va": 1000, "is_continuous": False, "type": "Receptacle",  "symbol": base_path + "industrial.svg"},
+                "⚙️ Motor":        {"va": 1500, "is_continuous": True,  "type": "Motor",       "symbol": base_path + "motor.svg"},
+                "🏗️ Pump":         {"va": 2200, "is_continuous": True,  "type": "Motor",       "symbol": base_path + "pump.svg"},
+                "❄️ AC Unit":      {"va": 3500, "is_continuous": True,  "type": "AC",          "symbol": base_path + "ac.svg"},
+                "📉 Panelboard":   {"va": 0,    "is_continuous": False, "type": "Panel",       "symbol": base_path + "panel.svg"},
+                "🔌 Feeder":       {"va": 0,    "is_continuous": False, "type": "Feeder",      "symbol": base_path + "feeder.svg"},
+                "🛡️ 1-Pole":       {"va": 0,    "is_continuous": False, "type": "Breaker",     "symbol": base_path + "breaker.svg"},
             }
 
+    # =====================================================================
+    # UI LAYOUT
+    # =====================================================================
     def setup_ui(self):
         self.statusBar().showMessage(f"Project: {self.project_data['name']} | Mode: Design")
         self.central_widget = QWidget()
@@ -285,7 +316,7 @@ class ElecDraftApp(QMainWindow):
         self.main_v_layout.setContentsMargins(0, 0, 0, 0)
         self.main_v_layout.setSpacing(0)
 
-        # Header Section
+        # ---------- Header bar --------------------------------------------
         self.header_frame = QFrame()
         self.header_frame.setFixedHeight(50)
         self.header_frame.setStyleSheet("background-color: #1a1f26; border-bottom: 1px solid #232931;")
@@ -303,7 +334,6 @@ class ElecDraftApp(QMainWindow):
             "color: #adb5bd; background: transparent; border: 1px solid #2d3646; padding: 4px 10px; font-size: 10px;")
         self.btn_load_template.clicked.connect(self.open_template_selector)
 
-        # DXF Import Button
         self.btn_load_dxf = QPushButton("📐 IMPORT DXF")
         self.btn_load_dxf.setStyleSheet(
             "color: #00ff88; background: transparent; border: 1px solid #2d3646; padding: 4px 10px; font-size: 10px;")
@@ -317,11 +347,11 @@ class ElecDraftApp(QMainWindow):
         header_layout.addStretch()
         self.main_v_layout.addWidget(self.header_frame)
 
-        # Workspace Splitter
+        # ---------- Main horizontal splitter ------------------------------
         self.workspace_splitter = QSplitter(Qt.Horizontal)
         self.main_v_layout.addWidget(self.workspace_splitter)
 
-        # Left Sidebar
+        # ===== LEFT SIDEBAR ===============================================
         left_sidebar = QFrame()
         left_sidebar.setMinimumWidth(280)
         left_sidebar.setObjectName("sidePanel")
@@ -337,7 +367,7 @@ class ElecDraftApp(QMainWindow):
         root = QTreeWidgetItem(self.tree, ["Site Project"])
         bldg = QTreeWidgetItem(root, [self.project_data["name"]])
         self.floor_plan_node = self.create_tree_item(bldg, "📐 Floor Plan 1")
-        self.panel_node = self.create_tree_item(bldg, "📉 Load Schedule")
+        self.panel_node       = self.create_tree_item(bldg, "📉 Load Schedule")
 
         self.tree.expandAll()
         self.tree.itemClicked.connect(self.handle_tree_navigation)
@@ -353,15 +383,14 @@ class ElecDraftApp(QMainWindow):
         self.tool_grid.setContentsMargins(0, 0, 0, 0)
         self.tool_grid.setSpacing(5)
 
-        # Add Room button
         self.btn_add_room = QPushButton("🏠 ADD NEW ROOM AREA")
         self.btn_add_room.setObjectName("toolButton")
         self.btn_add_room.clicked.connect(self.trigger_add_room)
         self.tool_grid.addWidget(self.btn_add_room)
 
-        self.add_tool_category("Lighting", ["💡 Light", "🔦 Emergency", "🏮 Chandelier"])
-        self.add_tool_category("Receptacles", ["🔌 Duplex", "🛁 GFCI Outlet", "🌀 Industrial"])
-        self.add_tool_category("Loads / AC", ["⚙️ Motor", "🏗️ Pump", "❄️ AC Unit"])
+        self.add_tool_category("Lighting",     ["💡 Light", "🔦 Emergency", "🏮 Chandelier"])
+        self.add_tool_category("Receptacles",  ["🔌 Duplex", "🛁 GFCI Outlet", "🌀 Industrial"])
+        self.add_tool_category("Loads / AC",   ["⚙️ Motor", "🏗️ Pump", "❄️ AC Unit"])
         self.add_tool_category("Distribution", ["📉 Panelboard", "🔌 Feeder", "🛡️ 1-Pole"])
 
         self.tool_grid.addStretch()
@@ -369,25 +398,27 @@ class ElecDraftApp(QMainWindow):
         left_layout.addWidget(scroll, stretch=10)
         self.workspace_splitter.addWidget(left_sidebar)
 
-        # Center Workspace
+        # ===== CENTER WORKSPACE ==========================================
         center_container = QWidget()
         center_v_layout = QVBoxLayout(center_container)
         center_v_layout.setContentsMargins(0, 0, 0, 0)
 
         center_splitter = QSplitter(Qt.Vertical)
+
         self.tabs = QTabWidget()
-        self.canvas = DesignCanvas()
+        self.canvas  = DesignCanvas()
         self.view_3d = View3D()
-        self.tabs.addTab(self.canvas, "📐 Floor Plan View")
-        self.tabs.addTab(QWidget(), "📉 Load Schedule")
+        self.tabs.addTab(self.canvas,  "📐 Floor Plan View")
+        self.tabs.addTab(QWidget(),    "📉 Load Schedule")
         self.tabs.addTab(self.view_3d, "📦 3D View")
         self.tabs.currentChanged.connect(self.handle_tab_change)
         center_splitter.addWidget(self.tabs)
 
-        # Table Section
+        # -- bottom table panel --------------------------------------------
         table_container = QFrame()
         table_container.setObjectName("tablePanel")
         table_v_layout = QVBoxLayout(table_container)
+
         table_header = QHBoxLayout()
         table_header.addWidget(QLabel("AUTOMATED LOAD SCHEDULE"))
 
@@ -414,6 +445,7 @@ class ElecDraftApp(QMainWindow):
         self.table.setHorizontalHeaderLabels(["DESCRIPTION", "PANEL", "VOLTAGE", "LOAD (VA)", "AMPS", "WIRE SIZE"])
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         table_v_layout.addWidget(self.table)
+
         center_splitter.addWidget(table_container)
         center_splitter.setStretchFactor(0, 7)
         center_splitter.setStretchFactor(1, 3)
@@ -421,13 +453,14 @@ class ElecDraftApp(QMainWindow):
         center_v_layout.addWidget(center_splitter)
         self.workspace_splitter.addWidget(center_container)
 
-        # Right Sidebar
+        # ===== RIGHT SIDEBAR =============================================
         self.right_sidebar = QFrame()
         self.right_sidebar.setMinimumWidth(300)
         self.right_sidebar.setObjectName("sidePanel")
         right_layout = QVBoxLayout(self.right_sidebar)
         right_layout.addWidget(QLabel("PROPERTIES & PARAMETERS"))
 
+        # -- Identity group -----------------------------------------------
         id_group = QGroupBox("Identity")
         id_lay = QVBoxLayout()
         self.name_edit = QLineEdit()
@@ -437,6 +470,7 @@ class ElecDraftApp(QMainWindow):
         id_group.setLayout(id_lay)
         right_layout.addWidget(id_group)
 
+        # -- Electrical Parameters group ----------------------------------
         elec_group = QGroupBox("Electrical Parameters")
         elec_lay = QVBoxLayout()
         self.va_edit = QLineEdit()
@@ -447,12 +481,13 @@ class ElecDraftApp(QMainWindow):
         elec_group.setLayout(elec_lay)
         right_layout.addWidget(elec_group)
 
+        # -- Validation group ---------------------------------------------
         analysis_group = QGroupBox("Validation & Accuracy")
         analysis_lay = QVBoxLayout()
-        self.lbl_accuracy = QLabel("Load Accuracy: --")
+        self.lbl_accuracy      = QLabel("Load Accuracy: --")
         self.lbl_short_circuit = QLabel("Short Circuit: --")
-        self.lbl_vdrop = QLabel("V-Drop Sync: --")
-        self.lbl_usability = QLabel("Usability Score: --")
+        self.lbl_vdrop         = QLabel("V-Drop Sync: --")
+        self.lbl_usability     = QLabel("Usability Score: --")
 
         for lbl in [self.lbl_accuracy, self.lbl_short_circuit, self.lbl_vdrop, self.lbl_usability]:
             lbl.setStyleSheet("color: #00ff88; font-weight: normal; font-family: 'Consolas'; font-size: 9px;")
@@ -461,8 +496,9 @@ class ElecDraftApp(QMainWindow):
         analysis_group.setLayout(analysis_lay)
         right_layout.addWidget(analysis_group)
 
+        # -- Sizing Verification ------------------------------------------
         right_layout.addWidget(QLabel("SIZING VERIFICATION"))
-        self.summary_box = QLabel("Required Breaker: --\nRequired Wire: --\nVoltage Drop: --")
+        self.summary_box = QLabel("Select a component\nto view sizing data...")
         self.summary_box.setObjectName("summaryBox")
         right_layout.addWidget(self.summary_box)
 
@@ -481,81 +517,117 @@ class ElecDraftApp(QMainWindow):
         self.workspace_splitter.addWidget(self.right_sidebar)
         self.workspace_splitter.setStretchFactor(1, 1)
 
+    # =====================================================================
+    # PROJECT FILE I / O
+    # =====================================================================
     def save_project(self):
         """Saves current project data and canvas components to a JSON file."""
         if not self.current_file:
             path, _ = QFileDialog.getSaveFileName(self, "Save Project", "", "ElecDraft (*.json)")
-            if not path: return
+            if not path:
+                return
             self.current_file = path
 
-        data = {"meta": self.project_data, "items": []}
-
         from ui.canvas import ElectricalComponent
+
+        data = {"meta": self.project_data, "items": []}
         for item in self.canvas.scene.items():
             if isinstance(item, ElectricalComponent):
                 data["items"].append({
                     "name": item.name,
-                    "va": item.va,
-                    "x": item.pos().x(),
-                    "y": item.pos().y()
+                    "va":   item.va,
+                    "x":    item.pos().x(),
+                    "y":    item.pos().y(),
                 })
 
         with open(self.current_file, 'w') as f:
             json.dump(data, f, indent=4)
+
         self.statusBar().showMessage(f"Project saved to {self.current_file}")
 
     def open_project(self):
         """Loads project data and recreates canvas components from JSON."""
         path, _ = QFileDialog.getOpenFileName(self, "Open Project", "", "ElecDraft (*.json)")
-        if path:
+        if not path:
+            return
+
+        try:
             with open(path, 'r') as f:
                 data = json.load(f)
-                self.canvas.scene.clear()
-                self.project_data.update(data["meta"])
-                for item_data in data["items"]:
-                    comp = self.canvas.add_component(item_data["name"], {"va": item_data["va"]})
-                    comp.setPos(item_data["x"], item_data["y"])
+
+            self.canvas.scene.clear()
+            self.project_data.update(data.get("meta", {}))
+
+            for item_data in data.get("items", []):
+                comp = self.canvas.add_component(item_data["name"], {"va": item_data["va"]})
+                comp.setPos(item_data["x"], item_data["y"])
+
             self.current_file = path
             self.sync_data()
             self.statusBar().showMessage(f"Loaded: {path}")
 
+        except (json.JSONDecodeError, KeyError, OSError) as e:
+            QMessageBox.critical(self, "Load Error", f"Failed to open project:\n{e}")
+
     def new_project(self):
-        """Clears the workspace for a new project."""
-        if QMessageBox.question(self, "New Project", "Clear current project?") == QMessageBox.Yes:
+        """Clears the workspace for a new project after user confirmation."""
+        if QMessageBox.question(self, "New Project",
+                                "Clear current project? All unsaved changes will be lost.",
+                                QMessageBox.Yes | QMessageBox.No) == QMessageBox.Yes:
             self.canvas.scene.clear()
             self.current_file = None
             self.sync_data()
+            self.summary_box.setText("Select a component\nto view sizing data...")
+            self.statusBar().showMessage("New project created")
 
+    # =====================================================================
+    # ROOM MANAGEMENT
+    # =====================================================================
     def trigger_add_room(self):
-        """Prompts for a name and adds a room area to the canvas."""
+        """Prompts for a name and delegates room creation to the canvas."""
         room_name, ok = QInputDialog.getText(self, "New Room", "Enter Room Name:")
-        if ok and room_name:
-            self.canvas.add_room(room_name)
+        if ok and room_name.strip():
+            self.canvas.add_room(room_name.strip())
 
     def run_room_analysis(self):
-        """Calculates total load per defined room area."""
+        """Calculates total load per defined room area and shows a report."""
         from ui.canvas import ElectricalComponent
-        rooms = [i for i in self.canvas.scene.items() if getattr(i, 'is_room_rect', False)]
+
+        rooms      = [i for i in self.canvas.scene.items() if getattr(i, 'is_room_rect', False)]
         components = [i for i in self.canvas.scene.items() if isinstance(i, ElectricalComponent)]
 
-        report = "ROOM LOAD SUMMARY (PEC COMPLIANCE):\n" + "=" * 35 + "\n"
+        report = "ROOM LOAD SUMMARY (PEC COMPLIANCE):\n" + "=" * 40 + "\n"
         total_site_va = 0
+        accounted_components = set()          # track which comps were inside a room
 
         for room in rooms:
             room_va = 0
             for comp in components:
-                if room.contains(room.mapFromScene(comp.scenePos() + QPointF(20, 20))):
+                # Map the component centre into the room's local coordinate space
+                local_pos = room.mapFromScene(comp.scenePos() + QPointF(20, 20))
+                if room.contains(local_pos):
                     room_va += comp.va
+                    accounted_components.add(id(comp))
             report += f"📍 {room.name}: {room_va} VA\n"
             total_site_va += room_va
 
-        report += "=" * 35 + f"\nTOTAL CONNECTED LOAD: {total_site_va} VA"
+        # Show any components that are NOT inside a named room
+        unaccounted_va = sum(c.va for c in components if id(c) not in accounted_components)
+        if unaccounted_va:
+            report += f"\n⚠️  Unassigned (outside rooms): {unaccounted_va} VA\n"
+            total_site_va += unaccounted_va
+
+        report += "=" * 40 + f"\nTOTAL CONNECTED LOAD: {total_site_va} VA"
         QMessageBox.information(self, "Load Analysis", report)
 
+    # =====================================================================
+    # PDF EXPORT / PLOT
+    # =====================================================================
     def export_to_pdf(self):
         """Renders the CAD drawing to a high-resolution PDF with a title block."""
         path, _ = QFileDialog.getSaveFileName(self, "Plot to PDF", "", "PDF Files (*.pdf)")
-        if not path: return
+        if not path:
+            return
 
         printer = QPrinter(QPrinter.HighResolution)
         printer.setOutputFormat(QPrinter.PdfFormat)
@@ -569,26 +641,32 @@ class ElecDraftApp(QMainWindow):
         target_rect = printer.pageRect(QPrinter.DevicePixel)
         self.canvas.scene.render(painter, target_rect, self.canvas.scene.sceneRect())
 
+        # Outer border
         painter.setPen(QPen(Qt.black, 10))
         painter.drawRect(target_rect)
 
+        # Title-block text (bottom-right corner)
         painter.setFont(QFont("Arial", 14, QFont.Bold))
-        info_x = target_rect.width() - 500
+        info_x = target_rect.width()  - 500
         info_y = target_rect.height() - 150
 
-        painter.drawText(info_x, info_y, f"PROJECT: {self.project_data['name'].upper()}")
+        painter.drawText(info_x, info_y,      f"PROJECT: {self.project_data['name'].upper()}")
         painter.drawText(info_x, info_y + 40, f"ENGINEER: {self.project_data['author']}")
         painter.drawText(info_x, info_y + 80, f"VOLTAGE: {self.project_data['system_voltage']}V / 1PH")
 
         painter.end()
         self.statusBar().showMessage(f"Successfully plotted to {path}")
 
+    # =====================================================================
+    # KEYBOARD & CONTEXT MENUS
+    # =====================================================================
     def keyPressEvent(self, event):
-        if event.key() == Qt.Key_Delete or event.key() == Qt.Key_Backspace:
+        if event.key() in (Qt.Key_Delete, Qt.Key_Backspace):
             self.delete_selected_components()
         super().keyPressEvent(event)
 
     def show_canvas_context_menu(self, pos):
+        """Right-click menu on the design canvas."""
         item = self.canvas.itemAt(pos)
         if item:
             menu = QMenu()
@@ -598,39 +676,66 @@ class ElecDraftApp(QMainWindow):
             menu.exec(self.canvas.mapToGlobal(pos))
 
     def delete_selected_components(self):
+        """Deletes every selected scene item after user confirmation."""
         items = self.canvas.scene.selectedItems()
-        if not items: return
-        confirm = QMessageBox.question(self, "Discard Component", f"Delete {len(items)} item(s)?",
-                                       QMessageBox.Yes | QMessageBox.No)
+        if not items:
+            return
+        confirm = QMessageBox.question(
+            self, "Discard Component",
+            f"Delete {len(items)} item(s)?",
+            QMessageBox.Yes | QMessageBox.No
+        )
         if confirm == QMessageBox.Yes:
-            for item in items: self.canvas.scene.removeItem(item)
+            for item in items:
+                self.canvas.scene.removeItem(item)
             self.sync_data()
 
+    # =====================================================================
+    # COMPONENT TOOLBOX CATEGORIES
+    # =====================================================================
     def add_tool_category(self, title, items):
+        """Builds one collapsible category with icon-tile buttons."""
         box = CollapsibleBox(title.upper())
         layout = QGridLayout()
         layout.setSpacing(4)
         layout.setContentsMargins(5, 5, 5, 5)
+
         for index, item_name in enumerate(items):
             tile_button = QPushButton()
             tile_button.setFixedSize(78, 88)
             tile_button.setObjectName("componentTile")
+
             btn_layout = QVBoxLayout(tile_button)
-            icon_lbl = QLabel(item_name.split(" ")[0] if " " in item_name else "⚙")
+
+            # Split "💡 Light" → emoji icon + text label
+            parts = item_name.split(" ", 1)
+            icon_text = parts[0] if len(parts) > 1 else "⚙"
+            name_text = parts[1] if len(parts) > 1 else item_name
+
+            icon_lbl = QLabel(icon_text)
             icon_lbl.setAlignment(Qt.AlignCenter)
             icon_lbl.setStyleSheet("font-size: 24px; color: #fff;")
-            name_lbl = QLabel(item_name.split(" ")[1] if " " in item_name else item_name)
+
+            name_lbl = QLabel(name_text)
             name_lbl.setAlignment(Qt.AlignCenter)
             name_lbl.setStyleSheet("font-size: 8px; color: #00e5ff;")
+
             btn_layout.addWidget(icon_lbl)
             btn_layout.addWidget(name_lbl)
+
             config = self.comp_library.get(item_name, {"va": 180, "type": "General"})
-            tile_button.clicked.connect(lambda chk, n=item_name, c=config: self.canvas.add_component(n, c))
+            # Capture loop variables with default args to avoid the classic closure bug
+            tile_button.clicked.connect(lambda checked, n=item_name, c=config: self.canvas.add_component(n, c))
+
             row, col = divmod(index, 3)
             layout.addWidget(tile_button, row, col)
+
         box.set_content_layout(layout)
         self.tool_grid.addWidget(box)
 
+    # =====================================================================
+    # GLOBAL STYLESHEET
+    # =====================================================================
     def apply_pro_styles(self):
         self.setStyleSheet("""
             QMainWindow, QWidget { background-color: #0d0f14; color: #a0a0a0; font-family: 'Segoe UI', sans-serif; }
@@ -643,7 +748,7 @@ class ElecDraftApp(QMainWindow):
             QTreeWidget, QTableWidget { background-color: #0d0f14; border: none; color: #e0e0e0; }
             QHeaderView::section { background-color: #1c222d; color: #00e5ff; border: 1px solid #0d0f14; padding: 5px; }
             #exportButton { background-color: #1c222d; color: #fff; font-weight: bold; padding: 6px 15px; border-radius: 3px; border: 1px solid #2d3646; }
-            #toolButton { background-color: #1c222d; color: #00e5ff; font-weight: bold; border: 1px solid #2d3646; padding: 8px; margin-top: 5px;}
+            #toolButton { background-color: #1c222d; color: #00e5ff; font-weight: bold; border: 1px solid #2d3646; padding: 8px; margin-top: 5px; }
             QTabBar::tab { background: #15191e; padding: 12px 25px; border: 1px solid #232931; margin-right: 2px; }
             QTabBar::tab:selected { background: #1c222d; color: #00e5ff; border-bottom: 2px solid #00e5ff; }
             QGroupBox { border: 1px solid #2d3646; margin-top: 15px; padding-top: 10px; color: #00e5ff; }
@@ -652,16 +757,22 @@ class ElecDraftApp(QMainWindow):
             QMenuBar::item:selected { background-color: #252e3e; }
         """)
 
+    # =====================================================================
+    # TEMPLATE / TREE HELPERS
+    # =====================================================================
     def open_template_selector(self):
-        path, _ = QFileDialog.getOpenFileName(self, "Open Floor Plan", "assets/templates", "Images (*.png *.jpg *.svg)")
-        if path: self.canvas.set_template(path)
+        path, _ = QFileDialog.getOpenFileName(self, "Open Floor Plan", "assets/templates",
+                                              "Images (*.png *.jpg *.svg)")
+        if path:
+            self.canvas.set_template(path)
 
     def create_tree_item(self, parent, text):
         return QTreeWidgetItem(parent, [text])
 
     def show_tree_context_menu(self, pos):
         item = self.tree.itemAt(pos)
-        if not item: return
+        if not item:
+            return
         menu = QMenu()
         rename = QAction("✏️ Rename", self)
         rename.triggered.connect(lambda: self.tree.editItem(item, 0))
@@ -674,9 +785,14 @@ class ElecDraftApp(QMainWindow):
         elif "Schedule" in item.text(0):
             self.tabs.setCurrentIndex(1)
 
+    # =====================================================================
+    # DATA SYNC  —  canvas  ↔  table  ↔  sidebar
+    # =====================================================================
     def sync_data(self):
-        """Calculates electrical values and updates the UI tables and labels."""
+        """Recalculates every row in the load-schedule table and refreshes the
+        sidebar sizing panel for whichever component is currently selected."""
         from ui.canvas import ElectricalComponent
+
         raw_items = [i for i in self.canvas.scene.items() if isinstance(i, ElectricalComponent)]
         self.table.setRowCount(len(raw_items))
 
@@ -692,105 +808,194 @@ class ElecDraftApp(QMainWindow):
             self.table.setItem(row, 4, QTableWidgetItem(f"{amps} A"))
             self.table.setItem(row, 5, QTableWidgetItem(wire))
 
-            if item == self.current_selected_item:
+            # Update sidebar only for the currently selected component
+            if item is self.current_selected_item:
                 self.summary_box.setText(f"Breaker: {breaker}A\nWire: {wire}\nDrop: {vd}%")
                 self.lbl_accuracy.setText(f"Load Accuracy: {min(100, (item.va / 180) * 100):.1f}%")
-                isc, _ = self.calculate_short_circuit(item.va)
-                self.lbl_short_circuit.setText(f"Short Circuit: {isc}kA")
+
+                isc = self.calculate_short_circuit(item.va)
+                self.lbl_short_circuit.setText(f"Short Circuit: {isc} kA")
                 self.lbl_vdrop.setText(f"V-Drop Sync: {vd}%")
 
+    # =====================================================================
+    # SELECTION & PROPERTY PANEL
+    # =====================================================================
     def handle_selection_event(self):
-        """Safely handles canvas item selection and populates the properties sidebar."""
+        """Populates the properties sidebar when a component is selected;
+        resets it to the placeholder when nothing (or a non-component) is selected."""
         try:
-            if not self.canvas or not self.canvas.scene: return
+            if not self.canvas or not self.canvas.scene:
+                return
             items = self.canvas.scene.selectedItems()
         except RuntimeError:
+            # Scene or widget may have been destroyed during shutdown
             return
 
         from ui.canvas import ElectricalComponent
+
         if items and isinstance(items[0], ElectricalComponent):
             self.current_selected_item = items[0]
+
+            # Block signals so setText() doesn't re-trigger apply_properties
             self.name_edit.blockSignals(True)
             self.va_edit.blockSignals(True)
             self.name_edit.setText(items[0].name)
             self.va_edit.setText(str(items[0].va))
             self.name_edit.blockSignals(False)
             self.va_edit.blockSignals(False)
+
             self.sync_data()
         else:
             self.current_selected_item = None
+            # Reset sidebar to neutral placeholder text
+            self.summary_box.setText("Select a component\nto view sizing data...")
+            self.lbl_accuracy.setText("Load Accuracy: --")
+            self.lbl_short_circuit.setText("Short Circuit: --")
+            self.lbl_vdrop.setText("V-Drop Sync: --")
 
     def apply_properties(self):
-        """Applies sidebar changes back to the selected canvas component."""
-        if self.current_selected_item:
-            try:
-                new_name = self.name_edit.text()
-                new_va = int(self.va_edit.text() or 0)
-                self.current_selected_item.update_data(new_name, new_va)
-                self.sync_data()
-            except ValueError:
-                pass
+        """Pushes sidebar edits back onto the selected canvas component."""
+        if not self.current_selected_item:
+            return
+        try:
+            new_name = self.name_edit.text()
+            new_va   = int(self.va_edit.text()) if self.va_edit.text() else 0
+            self.current_selected_item.update_data(new_name, new_va)
+            self.sync_data()
+        except ValueError:
+            pass  # Ignore non-integer VA input gracefully
 
+    # =====================================================================
+    # TAB SWITCHING
+    # =====================================================================
     def handle_tab_change(self, index):
+        """Triggers 3D scene rebuild only when the 3D tab becomes visible."""
         if index == 2:
             from ui.canvas import ElectricalComponent
-            self.view_3d.update_3d_scene([i for i in self.canvas.scene.items() if isinstance(i, ElectricalComponent)])
+            comps = [i for i in self.canvas.scene.items() if isinstance(i, ElectricalComponent)]
+            self.view_3d.update_3d_scene(comps)
 
+    # =====================================================================
+    # SINGLE-LINE DIAGRAM VIEWER
+    # =====================================================================
     def open_sld(self):
-        """Generates Single Line Diagram data from current canvas items."""
+        """Builds per-component breaker/wire data and launches SLDViewer."""
         from ui.canvas import ElectricalComponent
+
         items = [i for i in self.canvas.scene.items() if isinstance(i, ElectricalComponent)]
-        if items:
-            sld_data = []
-            for i in items:
-                _, breaker, wire, _ = PECCalculator.calculate_load(i.va)
-                sld_data.append({'name': i.name, 'breaker': breaker, 'wire': wire})
-            SLDViewer(sld_data).exec()
+        if not items:
+            QMessageBox.warning(self, "SLD", "No components on the canvas to generate an SLD.")
+            return
 
+        sld_data = []
+        for i in items:
+            _, breaker, wire, _ = PECCalculator.calculate_load(i.va)
+            sld_data.append({"name": i.name, "breaker": breaker, "wire": wire})
+
+        self.sld_viewer = SLDViewer(sld_data)   # keep a reference so the window stays alive
+        self.sld_viewer.show()
+
+    # =====================================================================
+    # USABILITY / COMPLIANCE CHECK
+    # =====================================================================
     def run_usability_evaluation(self):
-        self.lbl_usability.setText("Usability Score: 88.5%")
-        QMessageBox.information(self, "Analysis", "PEC Compliance check passed with 0 errors.")
+        """Checks layout against PEC branch-circuit density guidelines.
+        PEC allows a maximum of 10 outlets per 20 A branch circuit."""
+        from ui.canvas import ElectricalComponent
 
+        comps = [i for i in self.canvas.scene.items() if isinstance(i, ElectricalComponent)]
+        if not comps:
+            QMessageBox.warning(self, "Evaluation", "No components found to analyze.")
+            return
+
+        # Count receptacle-type components
+        outlets = [c for c in comps if "Outlet" in c.name or "Duplex" in c.name or "GFCI" in c.name]
+        # Simple scoring: deduct 2 points per outlet (baseline 100)
+        score = max(0, 100 - len(outlets) * 2)
+
+        self.lbl_usability.setText(f"Usability Score: {score}%")
+
+        status = "PASS" if score >= 60 else "FAIL — reduce receptacle count"
+        QMessageBox.information(
+            self, "Usability Result",
+            f"Layout Score : {score}%\nCompliance   : {status}\nOutlets found: {len(outlets)}"
+        )
+
+    # =====================================================================
+    # SHORT-CIRCUIT CALCULATION
+    # =====================================================================
     def calculate_short_circuit(self, va):
-        """Basic Short Circuit Calculation based on Transformer kVA and Z%."""
-        if va == 0: return 0, False
-        v = self.project_data['system_voltage']
-        kva = self.project_data['transformer_kva']
-        z = self.project_data['transformer_z']
-        isc = (kva * 1000) / (v * z)
-        return round(isc / 1000, 2), True
+        """Returns the bolted fault current in kA based on transformer kVA and Z%.
 
+        Formula (single-phase simplified):
+            Isc = (kVA × 1 000) / (V × Z)
+        """
+        if va == 0:
+            return 0.0
+
+        v   = self.project_data["system_voltage"]    # e.g. 230
+        kva = self.project_data["transformer_kva"]   # e.g. 50
+        z   = self.project_data["transformer_z"]     # e.g. 0.05
+
+        isc_amps = (kva * 1000) / (v * z)
+        return round(isc_amps / 1000, 2)             # convert A → kA
+
+    # =====================================================================
+    # EXCEL EXPORT
+    # =====================================================================
     def export_to_excel(self):
-        """Exports the current table data to an Excel file."""
+        """Exports the current Load Schedule table to an .xlsx file.
+        Asks for the destination path FIRST so no work is wasted if the
+        user cancels."""
+        path, _ = QFileDialog.getSaveFileName(self, "Export Schedule", "", "Excel Files (*.xlsx)")
+        if not path:
+            return
+
         try:
             wb = openpyxl.Workbook()
             ws = wb.active
             ws.title = "Load Schedule"
+
+            # Headers
             headers = ["DESCRIPTION", "PANEL", "VOLTAGE", "LOAD (VA)", "AMPS", "WIRE SIZE"]
             ws.append(headers)
 
+            # Table rows
             for row in range(self.table.rowCount()):
-                row_data = [self.table.item(row, col).text() for col in range(self.table.columnCount())]
+                row_data = []
+                for col in range(self.table.columnCount()):
+                    cell = self.table.item(row, col)
+                    row_data.append(cell.text() if cell else "")
                 ws.append(row_data)
 
-            path, _ = QFileDialog.getSaveFileName(self, "Export Excel", "", "Excel Files (*.xlsx)")
-            if path:
-                wb.save(path)
-                QMessageBox.information(self, "Success", "Exported successfully.")
-        except Exception as e:
-            QMessageBox.critical(self, "Error", f"Failed to export: {str(e)}")
+            wb.save(path)
+            self.statusBar().showMessage(f"Excel report saved to {path}")
+            QMessageBox.information(self, "Success", "Load schedule exported successfully.")
 
+        except Exception as e:
+            QMessageBox.critical(self, "Export Error", f"Failed to export:\n{e}")
+
+    # =====================================================================
+    # PROJECT SETTINGS DIALOG
+    # =====================================================================
     def open_project_settings(self):
+        """Opens the project-settings modal and applies changes on accept."""
         dialog = ProjectSettingsDialog(self.project_data, self)
         if dialog.exec():
             self.project_data.update(dialog.get_settings())
             self.sync_data()
 
 
+# ==========================================================================
+# APPLICATION ENTRY POINT
+# ==========================================================================
 if __name__ == "__main__":
+    # NOTE: High-DPI scaling is enabled automatically in PySide6 6.x.
+    # The old AA_EnableHighDpiScaling / AA_UseHighDpiPixmaps flags are
+    # deprecated and omitted intentionally.
     app = QApplication(sys.argv)
 
-    # Use enhanced splash screen
+    # ---------- Enhanced splash screen ------------------------------------
     from ui.splash_screen import EnhancedSplash
 
     logo_file = r"assets/symbols/ELECDRAFT_LOGO.png"
@@ -798,7 +1003,10 @@ if __name__ == "__main__":
     splash.show()
     app.processEvents()
 
+    # ---------- Main window ------------------------------------------------
     window = ElecDraftApp(splash=splash)
+
+    # Finish splash after 3 s, then fade the main window in 0.5 s later
     QTimer.singleShot(3000, lambda: splash.finish_loading(window))
     QTimer.singleShot(3500, window.fade_in)
 
