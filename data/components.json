@@ -1,0 +1,107 @@
+{
+  "💡 Light": {
+    "va": 100,
+    "type": "Lighting",
+    "is_continuous": true,
+    "symbol": "assets/symbols/light.svg",
+    "mounting_height": 2.4
+  },
+  "🏮 Chandelier": {
+    "va": 300,
+    "type": "Lighting",
+    "is_continuous": true,
+    "symbol": "assets/symbols/light.svg",
+    "mounting_height": 2.7
+  },
+  "🔦 Emergency": {
+    "va": 50,
+    "type": "Lighting",
+    "is_continuous": true,
+    "symbol": "assets/symbols/emergency.svg",
+    "mounting_height": 2.4
+  },
+  "🔌 Duplex": {
+    "va": 180,
+    "type": "Receptacle",
+    "is_continuous": false,
+    "symbol": "assets/symbols/duplex.svg",
+    "mounting_height": 0.3
+  },
+  "🛁 GFCI Outlet": {
+    "va": 180,
+    "type": "Receptacle",
+    "is_continuous": false,
+    "symbol": "assets/symbols/gfci.svg",
+    "mounting_height": 1.1
+  },
+  "🌀 Industrial": {
+    "va": 1200,
+    "type": "Receptacle",
+    "is_continuous": true,
+    "symbol": "assets/symbols/industrial.svg",
+    "mounting_height": 1.2
+  },
+  "🔘 1-Gang": {
+    "va": 0,
+    "type": "Switch",
+    "is_continuous": false,
+    "symbol": "assets/symbols/switch_1g.svg",
+    "mounting_height": 1.2
+  },
+  "🔘 2-Gang": {
+    "va": 0,
+    "type": "Switch",
+    "is_continuous": false,
+    "symbol": "assets/symbols/switch_2g.svg",
+    "mounting_height": 1.2
+  },
+  "🔘 3-Gang": {
+    "va": 0,
+    "type": "Switch",
+    "is_continuous": false,
+    "symbol": "assets/symbols/switch_3g.svg",
+    "mounting_height": 1.2
+  },
+  "⚙️ Motor": {
+    "va": 1500,
+    "type": "Motor",
+    "is_continuous": true,
+    "symbol": "assets/symbols/motor.svg",
+    "mounting_height": 0.5
+  },
+  "🏗️ Pump": {
+    "va": 2200,
+    "type": "Motor",
+    "is_continuous": true,
+    "symbol": "assets/symbols/pump.svg",
+    "mounting_height": 0.1
+  },
+  "❄️ AC Unit": {
+    "va": 2500,
+    "type": "Appliance",
+    "is_continuous": true,
+    "symbol": "assets/symbols/ac.svg",
+    "mounting_height": 2.1
+  },
+  "📉 Panelboard": {
+    "va": 0,
+    "type": "Panel",
+    "is_continuous": false,
+    "symbol": "assets/symbols/panel.svg",
+    "mounting_height": 1.6
+  },
+  "🛡️ 1-Pole": {
+    "va": 0,
+    "type": "Breaker",
+    "is_continuous": false,
+    "symbol": "assets/symbols/breaker.svg",
+    "mounting_height": 1.4
+  },
+  "🛡️ 3-Pole": {
+    "va": 0,
+    "type": "Breaker",
+    "is_continuous": false,
+    "symbol": "assets/symbols/breaker.svg",
+    "mounting_height": 1.4
+  }
+}

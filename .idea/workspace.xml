@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="3063fac6-37d5-43d3-89ed-4c5e93dc6c8b" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/ELECDRAFT.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/symbols/ELECDRAFT_LOGO.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/symbols/ac.svg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/symbols/breaker.svg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/symbols/duplex.svg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/symbols/emergency.svg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/symbols/feeder.svg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/symbols/gfci.svg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/symbols/industrial.svg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/symbols/light.svg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/symbols/motor.svg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/symbols/panel.svg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/symbols/pump.svg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/symbols/switch.svg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/symbols/switch_1g.svg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/symbols/switch_2g.svg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/symbols/switch_3g.svg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/templates/D and S ALL.dwg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/templates/EVERGREEN and KAERUS.dxf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/templates/residential_unit.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/components.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/modules/analysis_engine.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/modules/cad_utility.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/modules/exporter.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/modules/logic.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/modules/sld_generator.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/qodana.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ui/canvas.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ui/settings_dialog.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ui/sld_viewer.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ui/splash_screen.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ui/view_3d.py" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+        <option value="Setup Script" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="QODANA_PROBLEMS_VIEW_TAB" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 3
+}</component>
+  <component name="ProjectId" id="38I4m13itrXqNkiDKzL08bjguic" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Python._virtualenv.executor&quot;: &quot;Run&quot;,
+    &quot;Python.main.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;settings.sync&quot;
+  }
+}</component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\LENOVO\PycharmProjects\ELECDRAFT\assets\templates" />
+      <recent name="C:\Users\LENOVO\PycharmProjects\ELECDRAFT\assets\symbols" />
+    </key>
+  </component>
+  <component name="RunManager">
+    <configuration name="main" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="ELECDRAFT" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/main.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.main" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-python-sdk-f78a9d071105-aa17d162503b-com.jetbrains.pycharm.community.sharedIndexes.bundled-PC-243.26574.90" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="3063fac6-37d5-43d3-89ed-4c5e93dc6c8b" name="Changes" comment="" />
+      <created>1768473906849</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1768473906849</updated>
+    </task>
+    <servers />
+  </component>
+</project>

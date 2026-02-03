@@ -1,0 +1,5 @@
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="50" cy="50" r="40" stroke="#a0a0a0" stroke-width="5" fill="none" />
+  <text x="35" y="60" font-family="Arial" font-size="25" fill="#a0a0a0" font-weight="bold">G</text>
+  <line x1="10" y1="50" x2="20" y2="50" stroke="#a0a0a0" stroke-width="5" />
+</svg>
