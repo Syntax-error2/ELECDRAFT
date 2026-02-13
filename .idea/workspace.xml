@@ -5,16 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="3063fac6-37d5-43d3-89ed-4c5e93dc6c8b" name="Changes" comment="commit all">
-      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/readme.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/SLD_Diagram.png" beforeDir="false" afterPath="$PROJECT_DIR$/SLD_Diagram.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/modules/sld_generator.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/sld_generator.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/canvas.py" beforeDir="false" afterPath="$PROJECT_DIR$/ui/canvas.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/sld_viewer.py" beforeDir="false" afterPath="$PROJECT_DIR$/ui/sld_viewer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/splash_screen.py" beforeDir="false" afterPath="$PROJECT_DIR$/ui/splash_screen.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/view_3d.py" beforeDir="false" afterPath="$PROJECT_DIR$/ui/view_3d.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -30,6 +22,12 @@
     </option>
   </component>
   <component name="Git.Settings">
+    <option name="PUSH_TAGS">
+      <GitPushTagMode>
+        <option name="argument" value="--tags" />
+        <option name="title" value="All" />
+      </GitPushTagMode>
+    </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="GitHubPullRequestSearchHistory">{
@@ -143,7 +141,15 @@
       <option name="project" value="LOCAL" />
       <updated>1770128140896</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="commit all">
+      <option name="closed" value="true" />
+      <created>1770951034685</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1770951034685</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -151,7 +157,19 @@
       <map>
         <entry key="MAIN">
           <value>
-            <State />
+            <State>
+              <option name="FILTERS">
+                <map>
+                  <entry key="branch">
+                    <value>
+                      <list>
+                        <option value="master" />
+                      </list>
+                    </value>
+                  </entry>
+                </map>
+              </option>
+            </State>
           </value>
         </entry>
       </map>
