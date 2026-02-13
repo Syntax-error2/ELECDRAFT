@@ -1,135 +1,282 @@
-import os
-from PySide6.QtWidgets import (QDialog, QVBoxLayout, QGraphicsView, QGraphicsScene,
-                               QPushButton, QHBoxLayout, QFileDialog, QMessageBox)
-from PySide6.QtGui import QPainter, QPen, QFont, QColor, QBrush, QImage
+"""
+sld_viewer.py – Professional SLD Viewer Dialog
+===============================================
+Displays generated single-line diagrams with export and zoom controls.
+"""
+
+from PySide6.QtWidgets import (
+    QDialog, QVBoxLayout, QHBoxLayout, QPushButton, QLabel,
+    QGraphicsView, QGraphicsScene, QFileDialog, QMessageBox,
+    QFrame, QSlider, QComboBox
+)
+from PySide6.QtGui import (
+    QPainter, QPixmap, QPen, QColor, QFont, QImage
+)
 from PySide6.QtCore import Qt, QRectF
+from PySide6.QtPrintSupport import QPrinter
+
+from modules.sld_generator import SLDGenerator
 
 
+# ==========================================================================
+# SLD VIEWER DIALOG
+# ==========================================================================
 class SLDViewer(QDialog):
-    def __init__(self, electrical_data):
-        super().__init__()
-        self.setWindowTitle("ELECDRAFT - Auto-Generated Single Line Diagram")
-        self.resize(1100, 850)
+    """Professional dialog for viewing and exporting single-line diagrams."""
 
-        # Main Layout
-        self.main_layout = QVBoxLayout(self)
-        self.main_layout.setContentsMargins(0, 0, 0, 0)
+    def __init__(self, sld_data: list, project_data: dict = None, parent=None) -> None:
+        super().__init__(parent)
 
-        # 1. Scene & View Setup
+        self.sld_data = sld_data
+        self.project_data = project_data or {
+            "name": "Main Panel",
+            "system_voltage": 230,
+            "standard": "PEC 2017"
+        }
+
+        # ── Window setup ──────────────────────────────────────────────
+        self.setWindowTitle("Single Line Diagram Viewer – ELECDRAFT PRO")
+        self.setMinimumSize(900, 700)
+        self.resize(1000, 800)
+
+        # ── Build UI ──────────────────────────────────────────────────
+        self._setup_ui()
+
+        # ── Generate diagram ──────────────────────────────────────────
+        self._render_diagram()
+
+        # ── Apply styles ──────────────────────────────────────────────
+        self._apply_styles()
+
+    # ══════════════════════════════════════════════════════════════════
+    # UI CONSTRUCTION
+    # ══════════════════════════════════════════════════════════════════
+    def _setup_ui(self) -> None:
+        """Build the dialog layout."""
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setSpacing(0)
+
+        # ── Toolbar ───────────────────────────────────────────────────
+        toolbar = self._build_toolbar()
+        main_layout.addWidget(toolbar)
+
+        # ── Graphics view ─────────────────────────────────────────────
         self.scene = QGraphicsScene()
-        self.scene.setBackgroundBrush(QColor("#0d0f14"))
-
         self.view = QGraphicsView(self.scene)
         self.view.setRenderHint(QPainter.Antialiasing)
-        self.view.setRenderHint(QPainter.TextAntialiasing)
+        self.view.setRenderHint(QPainter.SmoothPixmapTransform)
         self.view.setDragMode(QGraphicsView.ScrollHandDrag)
+        main_layout.addWidget(self.view, stretch=1)
 
-        self.main_layout.addWidget(self.view)
+        # ── Status bar ────────────────────────────────────────────────
+        status = self._build_status_bar()
+        main_layout.addWidget(status)
 
-        # 2. Bottom Action Bar
-        self.controls = QHBoxLayout()
-        self.controls.setContentsMargins(10, 10, 10, 10)
+    def _build_toolbar(self) -> QFrame:
+        """Top toolbar with controls."""
+        frame = QFrame()
+        frame.setFixedHeight(50)
+        frame.setObjectName("toolbar")
 
-        self.btn_export = QPushButton("📸 SAVE AS IMAGE (PNG)")
-        self.btn_export.setFixedHeight(40)
-        self.btn_export.setStyleSheet("""
-            QPushButton {
-                background-color: #00b894;
-                color: white;
-                font-weight: bold;
-                border-radius: 5px;
-                padding: 0 20px;
-            }
-            QPushButton:hover { background-color: #55efc4; }
-        """)
-        self.btn_export.clicked.connect(self.export_image)
+        layout = QHBoxLayout(frame)
+        layout.setContentsMargins(12, 8, 12, 8)
+        layout.setSpacing(10)
 
-        self.controls.addStretch()
-        self.controls.addWidget(self.btn_export)
-        self.main_layout.addLayout(self.controls)
+        # Title
+        title = QLabel("📉 SINGLE LINE DIAGRAM")
+        title.setFont(QFont("Segoe UI", 11, QFont.Bold))
+        layout.addWidget(title)
 
-        # 3. Generate Schematic
-        self.generate_diagram(electrical_data)
+        layout.addStretch()
 
-    def draw_load_symbol(self, x, y, item_name, pen):
-        name_lower = item_name.lower()
-        if "light" in name_lower:
-            self.scene.addEllipse(x - 20, y, 40, 40, pen)
-            self.scene.addLine(x - 14, y + 6, x + 14, y + 34, pen)
-            self.scene.addLine(x + 14, y + 6, x - 14, y + 34, pen)
-        elif "duplex" in name_lower or "plug" in name_lower:
-            self.scene.addEllipse(x - 20, y, 40, 40, pen)
-            self.scene.addLine(x - 25, y + 15, x + 25, y + 15, pen)
-            self.scene.addLine(x - 25, y + 25, x + 25, y + 25, pen)
-        else:
-            self.scene.addEllipse(x - 20, y, 40, 40, pen)
-            m_txt = self.scene.addText("M", QFont("Segoe UI", 12, QFont.Weight.Bold))
-            m_txt.setDefaultTextColor(Qt.white)
-            m_txt.setPos(x - 11, y + 4)
+        # Zoom controls
+        layout.addWidget(QLabel("Zoom:"))
 
-    def generate_diagram(self, data):
-        pen = QPen(QColor("#d2dae2"), 2)
-        bus_pen = QPen(QColor("#00e5ff"), 6)
-        font_bold = QFont("Segoe UI", 10, QFont.Weight.Bold)
-        font_small = QFont("Consolas", 8)
-        accent_color = QColor("#00e5ff")
+        btn_zoom_in = QPushButton("🔍 +")
+        btn_zoom_in.clicked.connect(lambda: self.view.scale(1.2, 1.2))
+        layout.addWidget(btn_zoom_in)
 
-        # Main Entrance
-        self.scene.addLine(500, -150, 500, -50, pen)
-        srv_txt = "SERVICE ENTRANCE\n230V, 1-PHASE, 2-WIRE\n60 Hz, AC SYSTEM"
-        source_lbl = self.scene.addText(srv_txt, font_bold)
-        source_lbl.setDefaultTextColor(accent_color)
-        source_lbl.setPos(520, -140)
+        btn_zoom_out = QPushButton("🔍 −")
+        btn_zoom_out.clicked.connect(lambda: self.view.scale(0.8, 0.8))
+        layout.addWidget(btn_zoom_out)
 
-        main_brk = self.scene.addRect(480, -50, 40, 60, pen)
-        main_brk.setBrush(QBrush(QColor("#1e272e")))
+        btn_fit = QPushButton("⛶ Fit")
+        btn_fit.clicked.connect(lambda: self.view.fitInView(self.scene.sceneRect(), Qt.KeepAspectRatio))
+        layout.addWidget(btn_fit)
 
-        # Busbar
-        spacing = 220
-        bus_width = max(600, len(data) * spacing)
-        start_x = 500 - (bus_width / 2)
-        self.scene.addLine(start_x, 80, start_x + bus_width, 80, bus_pen)
+        layout.addSpacing(12)
 
-        # Branch Circuits
-        for i, item in enumerate(data):
-            x_pos = (start_x + (spacing / 2)) + (i * spacing)
-            self.scene.addLine(x_pos, 80, x_pos, 140, pen)
-            brk = self.scene.addRect(x_pos - 15, 140, 30, 50, pen)
-            brk.setBrush(QBrush(QColor("#2f3640")))
-            self.scene.addLine(x_pos, 190, x_pos, 260, pen)
-            self.draw_load_symbol(x_pos, 260, item['name'], pen)
+        # Export buttons
+        btn_export_pdf = QPushButton("🖨️ Export PDF")
+        btn_export_pdf.clicked.connect(self._export_pdf)
+        layout.addWidget(btn_export_pdf)
 
-            specs = (f"CKT NO. {i + 1}\nLOAD: {item['name'].upper()}\n"
-                     f"PROT: {item['breaker']}AT, 2P\nWIRE: {item['wire']}\n"
-                     f"CONDUIT: 20mmØ IMC")
-            txt = self.scene.addText(specs, font_small)
-            txt.setDefaultTextColor(QColor("#adb5bd"))
-            txt.setPos(x_pos + 25, 145)
+        btn_export_png = QPushButton("🖼️ Export PNG")
+        btn_export_png.clicked.connect(self._export_png)
+        layout.addWidget(btn_export_png)
 
-        self.view.fitInView(self.scene.itemsBoundingRect().adjusted(-100, -100, 100, 100),
-                            Qt.AspectRatioMode.KeepAspectRatio)
+        layout.addSpacing(12)
 
-    def export_image(self):
-        """Captures the scene and saves it as a high-res PNG."""
-        file_path, _ = QFileDialog.getSaveFileName(self, "Save Schematic", "SLD_Diagram.png", "PNG Files (*.png)")
-        if not file_path:
-            return
+        # Close button
+        btn_close = QPushButton("✖ Close")
+        btn_close.clicked.connect(self.close)
+        layout.addWidget(btn_close)
 
-        # Define resolution (2x for high quality)
-        rect = self.scene.itemsBoundingRect().adjusted(-50, -50, 50, 50)
-        image = QImage(rect.size().toSize() * 2, QImage.Format_ARGB32)
-        image.fill(QColor("#0d0f14"))  # Match background
+        return frame
 
-        painter = QPainter(image)
-        painter.setRenderHint(QPainter.Antialiasing)
-        self.scene.render(painter, QRectF(image.rect()), rect)
+    def _build_status_bar(self) -> QFrame:
+        """Bottom status bar."""
+        frame = QFrame()
+        frame.setFixedHeight(32)
+        frame.setObjectName("statusbar")
+
+        layout = QHBoxLayout(frame)
+        layout.setContentsMargins(12, 0, 12, 0)
+
+        self.lbl_status = QLabel(f"Circuits: {len(self.sld_data)}  │  Ready")
+        layout.addWidget(self.lbl_status)
+
+        layout.addStretch()
+
+        lbl_tip = QLabel("💡 Click and drag to pan  │  Use toolbar to zoom")
+        lbl_tip.setStyleSheet("color: #636C76; font-size: 9px;")
+        layout.addWidget(lbl_tip)
+
+        return frame
+
+    # ══════════════════════════════════════════════════════════════════
+    # DIAGRAM RENDERING
+    # ══════════════════════════════════════════════════════════════════
+    def _render_diagram(self) -> None:
+        """Generate the SLD and add to scene."""
+        # Calculate canvas size
+        circuit_count = len(self.sld_data)
+        width = 800
+        height = 200 + circuit_count * 70 + 200  # header + circuits + footer
+
+        # Create pixmap
+        pixmap = QPixmap(width, height)
+        pixmap.fill(Qt.white)
+
+        # Draw diagram
+        painter = QPainter(pixmap)
+        SLDGenerator.draw_diagram(painter, self.sld_data, self.project_data)
         painter.end()
 
-        if image.save(file_path):
-            QMessageBox.information(self, "Export Success", f"Diagram saved to:\n{file_path}")
+        # Add to scene
+        self.scene.clear()
+        self.scene.addPixmap(pixmap)
+        self.scene.setSceneRect(0, 0, width, height)
 
-    def resizeEvent(self, event):
-        if not self.scene.itemsBoundingRect().isEmpty():
-            self.view.fitInView(self.scene.itemsBoundingRect().adjusted(-100, -100, 100, 100),
-                                Qt.AspectRatioMode.KeepAspectRatio)
-        super().resizeEvent(event)
+        # Fit to view
+        self.view.fitInView(self.scene.sceneRect(), Qt.KeepAspectRatio)
+
+    # ══════════════════════════════════════════════════════════════════
+    # EXPORT FUNCTIONS
+    # ══════════════════════════════════════════════════════════════════
+    def _export_pdf(self) -> None:
+        """Export diagram to PDF."""
+        path, _ = QFileDialog.getSaveFileName(
+            self, "Export SLD to PDF", "", "PDF Files (*.pdf)"
+        )
+        if not path:
+            return
+
+        try:
+            # Create printer
+            printer = QPrinter(QPrinter.HighResolution)
+            printer.setOutputFormat(QPrinter.PdfFormat)
+            printer.setOutputFileName(path)
+            printer.setPageOrientation(QPrinter.Portrait)
+            printer.setPageSize(QPrinter.Letter)
+
+            # Render scene to printer
+            painter = QPainter(printer)
+            self.scene.render(painter)
+            painter.end()
+
+            self.lbl_status.setText(f"✓ Exported to: {path}")
+            QMessageBox.information(self, "Export Success", f"SLD exported to:\n{path}")
+
+        except Exception as e:
+            QMessageBox.critical(self, "Export Error", f"Failed to export PDF:\n{e}")
+
+    def _export_png(self) -> None:
+        """Export diagram to PNG."""
+        path, _ = QFileDialog.getSaveFileName(
+            self, "Export SLD to PNG", "", "PNG Files (*.png)"
+        )
+        if not path:
+            return
+
+        try:
+            # Render scene to image
+            rect = self.scene.sceneRect()
+            image = QImage(int(rect.width()), int(rect.height()), QImage.Format_ARGB32)
+            image.fill(Qt.white)
+
+            painter = QPainter(image)
+            painter.setRenderHint(QPainter.Antialiasing)
+            self.scene.render(painter)
+            painter.end()
+
+            image.save(path, "PNG")
+
+            self.lbl_status.setText(f"✓ Exported to: {path}")
+            QMessageBox.information(self, "Export Success", f"SLD exported to:\n{path}")
+
+        except Exception as e:
+            QMessageBox.critical(self, "Export Error", f"Failed to export PNG:\n{e}")
+
+    # ══════════════════════════════════════════════════════════════════
+    # STYLING
+    # ══════════════════════════════════════════════════════════════════
+    def _apply_styles(self) -> None:
+        """Apply professional dark theme."""
+        self.setStyleSheet("""
+            QDialog {
+                background-color: #0E1013;
+            }
+
+            #toolbar {
+                background-color: #1A1F26;
+                border-bottom: 1px solid #2D3646;
+            }
+
+            #statusbar {
+                background-color: #12151B;
+                border-top: 1px solid #2D3646;
+            }
+
+            QLabel {
+                color: #ECEFF4;
+                font-size: 10px;
+            }
+
+            QPushButton {
+                background-color: #1C222D;
+                color: #00D9FF;
+                border: 1px solid #2D3646;
+                border-radius: 4px;
+                padding: 6px 14px;
+                font-size: 10px;
+                font-weight: bold;
+            }
+
+            QPushButton:hover {
+                background-color: #252E3E;
+                border-color: #00D9FF;
+            }
+
+            QPushButton:pressed {
+                background-color: #1A2030;
+            }
+
+            QGraphicsView {
+                background-color: #161A1F;
+                border: 1px solid #2D3646;
+                border-radius: 4px;
+                margin: 8px;
+            }
+        """)

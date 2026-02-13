@@ -7,8 +7,8 @@ from ezdxf.addons.drawing.matplotlib import MatplotlibBackend
 
 from PySide6.QtWidgets import (QGraphicsView, QGraphicsScene, QGraphicsItem,
                                QGraphicsTextItem, QGraphicsLineItem, QGraphicsEllipseItem,
-                               QGraphicsPixmapItem, QGraphicsRectItem, QFileDialog)
-from PySide6.QtGui import QBrush, QColor, QPen, QPainter, QFont, QPixmap, QWheelEvent, QImage
+                               QGraphicsPixmapItem, QGraphicsRectItem, QFileDialog, QGraphicsObject)
+from PySide6.QtGui import QBrush, QColor, QPen, QPainter, QFont, QPixmap, QWheelEvent, QImage, QCursor
 from PySide6.QtCore import Qt, QPointF, QRectF, Signal, QObject
 from PySide6.QtSvgWidgets import QGraphicsSvgItem
 
@@ -117,18 +117,30 @@ class WireItem(QGraphicsLineItem):
             painter.drawLine(p1, p2)
 
 
-class ElectricalComponent(QGraphicsSvgItem):
+class ElectricalComponent(QGraphicsObject):
     def __init__(self, name, data, pos):
-        default_svg = "assets/symbols/feeder.svg" if data.get("type") == "Feeder" else "assets/symbols/generic.svg"
-        symbol_path = data.get("symbol", default_svg)
-        super().__init__(symbol_path)
-
+        super().__init__()
         self.name = name
         self.va = data.get("va", 0)
         self.comp_type = data.get("type", "General")
         self.is_continuous = data.get("is_continuous", False)
         self.connections = []
         self.wires = []
+        
+        default_svg = "assets/symbols/feeder.svg" if data.get("type") == "Feeder" else "assets/symbols/generic.svg"
+        self.symbol_path = data.get("symbol", default_svg)
+        
+        self.visual_item = None
+        if self.symbol_path.lower().endswith(".svg"):
+            self.visual_item = QGraphicsSvgItem(self.symbol_path)
+        else:
+            pix = QPixmap(self.symbol_path)
+            if pix.isNull():
+                 self.visual_item = QGraphicsSvgItem("assets/symbols/generic.svg")
+            else:
+                 self.visual_item = QGraphicsPixmapItem(pix)
+        
+        self.visual_item.setParentItem(self)
 
         self.setScale(0.4)
         self.setPos(pos)
@@ -137,6 +149,7 @@ class ElectricalComponent(QGraphicsSvgItem):
             QGraphicsItem.ItemIsMovable | QGraphicsItem.ItemIsSelectable | QGraphicsItem.ItemSendsGeometryChanges)
 
         self.label = QGraphicsTextItem(self)
+        self.label.setParentItem(self)
         self.label.setScale(2.5)
         self.label.setFont(QFont("Consolas", 8, QFont.Weight.Bold))
         self.label.setDefaultTextColor(QColor("#00e5ff"))
@@ -144,20 +157,14 @@ class ElectricalComponent(QGraphicsSvgItem):
         self.update_label_text()
 
     def paint(self, painter, option, widget):
-        if not self.renderer().isValid():
-            painter.setRenderHint(QPainter.Antialiasing)
-            pen = QPen(QColor("#00e5ff"), 4)
-            painter.setPen(pen)
-            painter.setBrush(QBrush(QColor(0, 229, 255, 40)))
-            rect = QRectF(0, 0, 100, 100)
-            painter.drawRect(rect)
-            painter.drawLine(0, 100, 100, 0)
-        else:
-            super().paint(painter, option, widget)
-
         if self.isSelected():
             painter.setPen(QPen(Qt.white, 2, Qt.DashLine))
             painter.drawRect(self.boundingRect().adjusted(-5, -5, 5, 5))
+
+    def boundingRect(self):
+        if self.visual_item:
+            return self.visual_item.boundingRect()
+        return QRectF(0, 0, 100, 100)
 
     def update_label_text(self):
         label_str = f"{self.name}" if self.comp_type == "Feeder" else f"{self.name}\n{self.va}VA"
@@ -202,6 +209,10 @@ class DesignCanvas(QGraphicsView):
         self.start_item = None
         self.floorplan_item = None
         self.obstacle_map = None
+
+        # Panning state
+        self._pan_active = False
+        self._pan_start = QPointF(0, 0)
 
     def load_cad_layout(self, dxf_path):
         """Processes the DXF file to create a visual and analytical background."""
@@ -417,7 +428,14 @@ class DesignCanvas(QGraphicsView):
         return None
 
     def mousePressEvent(self, event):
-        """Handle mouse press for wire drawing."""
+        """Handle mouse press for wire drawing and panning."""
+        if event.button() == Qt.MiddleButton:
+            self._pan_active = True
+            self._pan_start = event.pos()
+            self.setCursor(Qt.ClosedHandCursor)
+            event.accept()
+            return
+
         if self.wire_mode and event.button() == Qt.LeftButton:
             item = self.get_component_at(event.pos())
             if item:
@@ -433,7 +451,15 @@ class DesignCanvas(QGraphicsView):
         super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event):
-        """Handle mouse move for wire drawing preview."""
+        """Handle mouse move for wire drawing preview and panning."""
+        if self._pan_active:
+            delta = event.pos() - self._pan_start
+            self._pan_start = event.pos()
+            self.horizontalScrollBar().setValue(self.horizontalScrollBar().value() - delta.x())
+            self.verticalScrollBar().setValue(self.verticalScrollBar().value() - delta.y())
+            event.accept()
+            return
+
         if self.wire_mode and self.temp_line:
             end_pos = self.mapToScene(event.pos())
             self.temp_line.setLine(
@@ -446,7 +472,13 @@ class DesignCanvas(QGraphicsView):
         super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event):
-        """Handle mouse release to finalize wire connection."""
+        """Handle mouse release to finalize wire connection or panning."""
+        if event.button() == Qt.MiddleButton:
+            self._pan_active = False
+            self.setCursor(Qt.ArrowCursor)
+            event.accept()
+            return
+
         if self.wire_mode and self.temp_line:
             end_item = self.get_component_at(event.pos())
 
@@ -458,6 +490,10 @@ class DesignCanvas(QGraphicsView):
                 # Track wires in components
                 self.start_item.wires.append(new_wire)
                 end_item.wires.append(new_wire)
+
+                # Link logically
+                self.start_item.add_connection(end_item)
+                end_item.add_connection(self.start_item)
 
                 # Emit signal for updates
                 self.signals.circuit_updated.emit()
